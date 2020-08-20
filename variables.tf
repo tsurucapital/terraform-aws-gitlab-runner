@@ -155,7 +155,7 @@ variable "runners_privileged" {
 
 variable "runners_additional_volumes" {
   description = "Additional volumes that will be used in the runner config.toml, e.g Docker socket"
-  type        = list
+  type        = list(string)
   default     = []
 }
 
@@ -453,7 +453,7 @@ variable "enable_manage_gitlab_token" {
 }
 
 variable "overrides" {
-  description = "This maps provides the possibility to override some defaults. The following attributes are supported: `name_sg` overwrite the `Name` tag for all security groups created by this module. `name_runner_agent_instance` override the `Name` tag for the ec2 instance defined in the auto launch configuration. `name_docker_machine_runners` ovverrid the `Name` tag spot instances created by the runner agent."
+  description = "This maps provides the possibility to override some defaults. The following attributes are supported: `name_sg` overwrite the `Name` tag for all security groups created by this module. `name_runner_agent_instance` override the `Name` tag for the ec2 instance defined in the auto launch configuration. `name_docker_machine_runners` overrides the `Name` tag spot instances created by the runner agent."
   type        = map(string)
 
   default = {
@@ -576,5 +576,45 @@ variable "permissions_boundary" {
 variable "log_group_name" {
   description = "Option to override the default name (`environment`) of the log group, requires `enable_cloudwatch_logging = true`."
   default     = null
+  type        = string
+}
+
+variable "runners" {
+  description = "List of [[runners]] groups defined in GitLab runner configuration. Defaults from `local.runners_defaults` apply to all groups. To see what specific values can be set, see definition of `local.runners_defaults` and variables that can be set directly on this module, which make up a base configuration if you don't set any values here."
+  default     = [{}]
+  type        = list(any)
+}
+
+################################################################################
+### Variables passed directly to config module.
+################################################################################
+
+variable "config_bucket" {
+  type        = string
+  default     = ""
+  description = "If you already have exisiting S3 Bucket for storing configuration files, pass it's name here. Otherwise, leave this field empty and a new, private S3 bucket will be created by this module."
+}
+
+variable "config_key" {
+  type        = string
+  default     = ""
+  description = "Path to Gitlab runner configuration on configuration S3 bucket. If left empty, defaults to `config.toml`."
+}
+
+variable "cloudtrail_bucket" {
+  type        = string
+  default     = ""
+  description = "If you already have exisiting S3 Bucket for CloudTrail, pass it's name here. Otherwise, leave this field empty and a new CloudTrail S3 bucket will be created by this module."
+}
+
+variable "cloudtrail_prefix" {
+  type        = string
+  default     = ""
+  description = "Prefix on S3 bucket for storing CloudTrail logs."
+}
+
+variable "post_reload_config" {
+  description = "Custom script to be executed after config.toml file is reloaded. If you use `userdata_post_install` to further modify config.toml, you may need to do the same modifications here, to ensure that configuration is always modified in the same way."
+  default     = ""
   type        = string
 }
