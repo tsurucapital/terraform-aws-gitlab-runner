@@ -238,12 +238,12 @@ module "gitlab_runner" {
   runners_image               = "docker:19.03.12"
   runners_pull_policy         = "if-not-present"
 
-  runners_idle_count          = 0
-  runners_idle_time           = 3600
-  runners_off_peak_idle_count = 0
-  runners_off_peak_timezone   = var.timezone
-  runners_off_peak_periods    = jsonencode(["* * 0-9,17-23 * * mon-fri *", "* * * * * sat,sun *"])
-  runners_off_peak_idle_time  = 1800
+  runners_idle_count                     = 0
+  runners_idle_time                      = 3600
+  runners_machine_autoscaling_idle_count = 0
+  runners_machine_autoscaling_timezone   = var.timezone
+  runners_machine_autoscaling_periods    = ["* * 0-9,17-23 * * mon-fri *", "* * * * * sat,sun *"]
+  runners_machine_autoscaling_idle_time  = 1800
 
   runners_environment_vars = [
     "DOCKER_VERSION=19.03.12",

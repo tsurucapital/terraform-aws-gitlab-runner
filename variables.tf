@@ -195,28 +195,28 @@ variable "runners_ebs_optimized" {
   default     = true
 }
 
-variable "runners_off_peak_timezone" {
-  description = "Off peak idle time zone of the runners, will be used in the runner config.toml."
-  type        = string
-  default     = ""
+variable "runners_machine_autoscaling_periods" {
+  description = "runners.machine.autoscaling.Periods: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersmachineautoscaling-sections"
+  type        = list(string)
+  default     = null
 }
 
-variable "runners_off_peak_idle_count" {
-  description = "Off peak idle count of the runners, will be used in the runner config.toml."
+variable "runners_machine_autoscaling_idle_count" {
+  description = "runners.machine.autoscaling.IdleCount: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersmachineautoscaling-sections"
   type        = number
-  default     = 0
+  default     = null
 }
 
-variable "runners_off_peak_idle_time" {
-  description = "Off peak idle time of the runners, will be used in the runner config.toml."
+variable "runners_machine_autoscaling_idle_time" {
+  description = "runners.machine.autoscaling.IdleTime: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersmachineautoscaling-sections"
   type        = number
-  default     = 0
+  default     = null
 }
 
-variable "runners_off_peak_periods" {
-  description = "Off peak periods of the runners, will be used in the runner config.toml."
+variable "runners_machine_autoscaling_timezone" {
+  description = "runners.machine.autoscaling.Timezone: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersmachineautoscaling-sections"
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "runners_root_size" {

@@ -61,9 +61,9 @@ module "runner" {
     "tf-aws-gitlab-runner:instancelifecycle" = "spot:yes"
   }
 
-  runners_off_peak_timezone   = var.timezone
-  runners_off_peak_idle_count = 0
-  runners_off_peak_idle_time  = 60
+  runners_machine_autoscaling_timezone   = var.timezone
+  runners_machine_autoscaling_idle_count = 0
+  runners_machine_autoscaling_idle_time  = 60
 
   runners_privileged         = "true"
   runners_additional_volumes = ["/certs/client"]
@@ -83,7 +83,7 @@ module "runner" {
   ]
 
   # working 9 to 5 :)
-  runners_off_peak_periods = "[\"* * 0-9,17-23 * * mon-fri *\", \"* * * * * sat,sun *\"]"
+  runners_machine_autoscaling_periods = ["* * 0-9,17-23 * * mon-fri *", "* * * * * sat,sun *"]
 }
 
 resource "null_resource" "cancel_spot_requests" {

@@ -2,9 +2,6 @@ locals {
   // Convert list to a string separated and prepend by a comma if docker_machine_options are not empty
   docker_machine_options_string = format("      %s", join(",\n      ", formatlist("%q", var.docker_machine_options)))
 
-  // Ensure off peak is optional
-  runners_off_peak_periods_string = var.runners_off_peak_periods == "" ? "" : format("OffPeakPeriods = %s", var.runners_off_peak_periods)
-
   // Ensure max builds is optional
   runners_max_builds_string = var.runners_max_builds == 0 ? "" : format("MaxBuilds = %d", var.runners_max_builds)
 

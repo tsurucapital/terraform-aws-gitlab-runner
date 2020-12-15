@@ -57,7 +57,11 @@
 %{ endif }
 ${docker_machine_options}
     ]
-    OffPeakTimezone = "${off_peak_timezone}"
-    OffPeakIdleCount = ${off_peak_idle_count}
-    OffPeakIdleTime = ${off_peak_idle_time}
-    ${off_peak_periods_string}
+%{ for autoscaling_config in docker_machine_autoscaling ~}
+%{~ if length(keys(autoscaling_config)) > 0 ~}
+    [[runners.machine.autoscaling]]
+    %{~ for k, v in autoscaling_config ~}
+      ${k} = ${jsonencode(v)}
+    %{~ endfor ~}
+%{~ endif ~}
+%{ endfor ~}
