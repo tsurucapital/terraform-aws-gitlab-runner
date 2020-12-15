@@ -13,8 +13,8 @@ locals {
 
   extra_files_prefix = trim(var.extra_files_prefix == "" ? "/extra-files/" : var.extra_files_prefix, "/")
 
-  config_uri      = "s3://${aws_s3_bucket_object.config.bucket}/${aws_s3_bucket_object.config.key}"
-  extra_files_uri = "s3://${aws_s3_bucket_object.config.bucket}/${local.extra_files_prefix}"
+  config_uri      = "s3://${local.config_bucket_name}/${local.config_key}"
+  extra_files_uri = "s3://${local.config_bucket_name}/${local.extra_files_prefix}"
 
   post_reload_script = length(var.post_reload_script) > 0 ? "echo \"Executing post_reload_config script...\"\n${var.post_reload_script}" : ""
 }
