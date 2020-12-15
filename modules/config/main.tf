@@ -244,15 +244,10 @@ resource "aws_ssm_document" "reload_config" {
                 echo "Runner is not ready yet, skipping update, as runner should pull configuration automatically on boot."
                 exit 0
               }
-              echo "Pulling Gitlab token from SSM parameters..."
-              token=$(aws ssm get-parameters --names "${var.gitlab_token_ssm_key}" --with-decryption --region "${data.aws_region.current.name}" | jq -r ".Parameters | .[0] | .Value")
 
               echo "Pulling file from S3 bucket..."
               config_file="/etc/gitlab-runner/config.toml"
               aws s3 cp "${local.config_uri}" "$${config_file}"
-
-              echo "Replacing tokens in configuration with stored Gitlab token..."
-              sed -i.bak s/__REPLACED_BY_USER_DATA__/`echo $token`/g "$${config_file}"
 
               echo "Pulling extra files from S3 bucket (if any)..."
               ${local.extra_files_sync_command}

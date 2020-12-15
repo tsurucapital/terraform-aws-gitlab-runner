@@ -47,11 +47,6 @@ variable "runner_autoscaling_group_name" {
   description = "Configuration update script is ran on instances running in this autoscaling group."
 }
 
-variable "gitlab_token_ssm_key" {
-  type        = string
-  description = "Key of Gitlab token stored as SSM Parameter."
-}
-
 variable "extra_files_prefix" {
   type        = string
   default     = "/extra-files/"

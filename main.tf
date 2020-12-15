@@ -8,35 +8,6 @@ data "aws_availability_zone" "runners" {
   name = data.aws_subnet.runners.availability_zone
 }
 
-# Parameter value is managed by the user-data script of the gitlab runner instance
-resource "aws_ssm_parameter" "runner_registration_token" {
-  name  = local.secure_parameter_store_runner_token_key
-  type  = "SecureString"
-  value = "null"
-
-  tags = local.tags
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "null_resource" "remove_runner" {
-  depends_on = [aws_ssm_parameter.runner_registration_token]
-  triggers = {
-    script                                  = "${path.module}/bin/remove-runner.sh"
-    aws_region                              = var.aws_region
-    runners_gitlab_url                      = var.runners_gitlab_url
-    secure_parameter_store_runner_token_key = local.secure_parameter_store_runner_token_key
-  }
-
-  provisioner "local-exec" {
-    when       = destroy
-    on_failure = continue
-    command    = "${self.triggers.script} ${self.triggers.aws_region} ${self.triggers.runners_gitlab_url} ${self.triggers.secure_parameter_store_runner_token_key}"
-  }
-}
-
 locals {
   enable_asg_recreation = var.enable_forced_updates != null ? ! var.enable_forced_updates : var.enable_asg_recreation
 
@@ -56,24 +27,15 @@ locals {
 
   template_gitlab_runner = templatefile("${path.module}/template/gitlab-runner.tpl",
     {
-      gitlab_runner_version                   = var.gitlab_runner_version
-      docker_machine_version                  = var.docker_machine_version
-      docker_machine_download_url             = var.docker_machine_download_url
-      runners_config_s3_uri                   = module.config.config_uri
-      runners_executor                        = var.runners_executor
-      pre_install                             = var.userdata_pre_install
-      post_install                            = var.userdata_post_install
-      runners_gitlab_url                      = var.runners_gitlab_url
-      runners_token                           = var.runners_token
-      secure_parameter_store_runner_token_key = local.secure_parameter_store_runner_token_key
-      secure_parameter_store_region           = var.aws_region
-      gitlab_runner_registration_token        = var.gitlab_runner_registration_config["registration_token"]
-      giltab_runner_description               = var.gitlab_runner_registration_config["description"]
-      gitlab_runner_tag_list                  = var.gitlab_runner_registration_config["tag_list"]
-      gitlab_runner_locked_to_project         = var.gitlab_runner_registration_config["locked_to_project"]
-      gitlab_runner_run_untagged              = var.gitlab_runner_registration_config["run_untagged"]
-      gitlab_runner_maximum_timeout           = var.gitlab_runner_registration_config["maximum_timeout"]
-      gitlab_runner_access_level              = lookup(var.gitlab_runner_registration_config, "access_level", "not_protected")
+      gitlab_runner_version       = var.gitlab_runner_version
+      docker_machine_version      = var.docker_machine_version
+      docker_machine_download_url = var.docker_machine_download_url
+      runners_config_s3_uri       = module.config.config_uri
+      runners_executor            = var.runners_executor
+      pre_install                 = var.userdata_pre_install
+      post_install                = var.userdata_post_install
+      runners_gitlab_url          = var.runners_gitlab_url
+      runners_token               = var.runners_token
   })
 
   runners_defaults = {
@@ -248,9 +210,9 @@ module "config" {
 
   name                          = var.environment
   runner_autoscaling_group_name = aws_autoscaling_group.gitlab_runner_instance.name
-  gitlab_token_ssm_key          = local.secure_parameter_store_runner_token_key
-  config_content                = local.runner_config
-  tags                          = local.tags
+
+  config_content = local.runner_config
+  tags           = local.tags
 
   post_reload_script = var.post_reload_config
   config_bucket      = var.config_bucket
@@ -399,28 +361,6 @@ resource "aws_iam_role_policy_attachment" "service_linked_role" {
 
 resource "aws_eip" "gitlab_runner" {
   count = var.enable_eip ? 1 : 0
-}
-
-################################################################################
-### AWS Systems Manager access to store runner token once registered
-################################################################################
-resource "aws_iam_policy" "ssm" {
-  count = var.enable_manage_gitlab_token ? 1 : 0
-
-  name        = "${var.environment}-ssm"
-  path        = "/"
-  description = "Policy for runner token param access via SSM"
-
-  policy = templatefile("${path.module}/policies/instance-secure-parameter-role-policy.json", {
-    arn_format = var.arn_format
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ssm" {
-  count = var.enable_manage_gitlab_token ? 1 : 0
-
-  role       = aws_iam_role.instance.name
-  policy_arn = aws_iam_policy.ssm[0].arn
 }
 
 ################################################################################

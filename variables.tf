@@ -120,7 +120,7 @@ variable "runners_gitlab_url" {
 variable "runners_token" {
   description = "Token for the runner, will be used in the runner config.toml."
   type        = string
-  default     = "__REPLACED_BY_USER_DATA__"
+  default     = null
 }
 
 variable "runners_limit" {
@@ -435,33 +435,6 @@ variable "runner_ami_owners" {
 
   # Canonical
   default = ["099720109477"]
-}
-
-variable "gitlab_runner_registration_config" {
-  description = "Configuration used to register the runner. See the README for an example, or reference the examples in the examples directory of this repo."
-  type        = map(string)
-
-  default = {
-    registration_token = ""
-    tag_list           = ""
-    description        = ""
-    locked_to_project  = ""
-    run_untagged       = ""
-    maximum_timeout    = ""
-    access_level       = ""
-  }
-}
-
-variable "secure_parameter_store_runner_token_key" {
-  description = "The key name used store the Gitlab runner token in Secure Parameter Store"
-  type        = string
-  default     = "runner-token"
-}
-
-variable "enable_manage_gitlab_token" {
-  description = "Boolean to enable the management of the GitLab token in SSM. If `true` the token will be stored in SSM, which means the SSM property is a terraform managed resource. If `false` the Gitlab token will be stored in the SSM by the user-data script during creation of the the instance. However the SSM parameter is not managed by terraform and will remain in SSM after a `terraform destroy`."
-  type        = bool
-  default     = true
 }
 
 variable "overrides" {

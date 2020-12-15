@@ -49,24 +49,8 @@ if ! [ -x "$(command -v jq)" ]; then
   yum install jq -y
 fi
 
-token=$(aws ssm get-parameters --names "${secure_parameter_store_runner_token_key}" --with-decryption --region "${secure_parameter_store_region}" | jq -r ".Parameters | .[0] | .Value")
-if [[ `echo ${runners_token}` == "__REPLACED_BY_USER_DATA__" && `echo $token` == "null" ]]
-then
-  token=$(curl --request POST -L "${runners_gitlab_url}/api/v4/runners" \
-    --form "token=${gitlab_runner_registration_token}" \
-    --form "tag_list=${gitlab_runner_tag_list}" \
-    --form "description=${giltab_runner_description}" \
-    --form "locked=${gitlab_runner_locked_to_project}" \
-    --form "run_untagged=${gitlab_runner_run_untagged}" \
-    --form "maximum_timeout=${gitlab_runner_maximum_timeout}" \
-    --form "access_level=${gitlab_runner_access_level}" \
-    | jq -r .token)
-  aws ssm put-parameter --overwrite --type SecureString  --name "${secure_parameter_store_runner_token_key}" --value="$token" --region "${secure_parameter_store_region}"
-fi
 
-sed -i.bak s/__REPLACED_BY_USER_DATA__/`echo $token`/g /etc/gitlab-runner/config.toml
-
-# A small script to remove this runner from being registered with Gitlab. 
+# A small script to remove this runner from being registered with Gitlab.
 cat <<REM > /etc/rc.d/init.d/remove_gitlab_registration
 #!/bin/bash
 # chkconfig: 1356 99 03
@@ -82,13 +66,9 @@ start() {
 }
 
 # Remove all running docker-machine instances
-# Overwrite token in SSM with null and remove runner from Gitlab
 stop() {
     logger "Removing Docker Machine Instances"
     for runner in $(docker-machine ls | awk '{print $1}' | grep runner); do docker-machine rm -y "$runner"; done
-    logger "Removing Gitlab Runner Token"
-    aws ssm put-parameter --overwrite --type SecureString  --name "${secure_parameter_store_runner_token_key}" --region "${secure_parameter_store_region}" --value="null" 2>&1 | logger &
-    curl -sS --request DELETE "${runners_gitlab_url}/api/v4/runners" --form "token=$token" 2>&1 | logger &
     retval=\$?
     rm -f \$lockfile
     return \$retval
