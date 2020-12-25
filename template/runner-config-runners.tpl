@@ -36,31 +36,13 @@
     ${max_builds}
     MachineDriver = "${machine_driver}"
     MachineName = "${machine_name}"
-    MachineOptions = [
-%{~ if machine_driver == "amazonec2" }
-      "amazonec2-instance-type=${instance_type}",
-      "amazonec2-region=${aws_region}",
-      "amazonec2-zone=${aws_zone}",
-      "amazonec2-vpc-id=${vpc_id}",
-      "amazonec2-subnet-id=${subnet_id}",
-      "amazonec2-private-address-only=${use_private_address_only}",
-      "amazonec2-use-private-address=${use_private_address}",
-      "amazonec2-request-spot-instance=${request_spot_instance}",
-      "amazonec2-spot-price=${spot_price_bid}",
-      "amazonec2-security-group=${security_group_name}",
-      "amazonec2-tags=${tags}",
-      "amazonec2-use-ebs-optimized-instance=${ebs_optimized}",
-      "amazonec2-monitoring=${monitoring}",
-      "amazonec2-iam-instance-profile=%{ if iam_instance_profile_name != "" }${iam_instance_profile_name}%{ else }${instance_profile}%{ endif ~}",
-      "amazonec2-root-size=${root_size}",
-      "amazonec2-ami=${ami}"%{ if length(docker_machine_options) > 0 },%{ endif ~}
-%{ endif }
 %{ if length(docker_machine_options) > 0 ~}
+    MachineOptions = [
       %{~ for ix in range(length(docker_machine_options)) ~}
       "${docker_machine_options[ix]}"${ix < length(docker_machine_options) - 1 ? "," : ""}
       %{~ endfor ~}
-%{~ endif ~}
     ]
+%{ endif ~}
 %{ for autoscaling_config in docker_machine_autoscaling ~}
 %{~ if length(keys(autoscaling_config)) > 0 ~}
     [[runners.machine.autoscaling]]

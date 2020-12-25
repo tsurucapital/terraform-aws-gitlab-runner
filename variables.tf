@@ -3,12 +3,6 @@ variable "aws_region" {
   type        = string
 }
 
-variable "aws_zone" {
-  description = "Deprecated. Will be removed in the next major release."
-  type        = string
-  default     = "a"
-}
-
 variable "arn_format" {
   type        = string
   default     = "arn:aws"
@@ -22,11 +16,6 @@ variable "environment" {
 
 variable "vpc_id" {
   description = "The target VPC for the docker-machine and runner instances."
-  type        = string
-}
-
-variable "subnet_id_runners" {
-  description = "List of subnets used for hosting the gitlab-runners."
   type        = string
 }
 
@@ -63,18 +52,6 @@ variable "ssh_key_pair" {
   description = "Set this to use existing AWS key pair"
   type        = string
   default     = null
-}
-
-variable "docker_machine_instance_type" {
-  description = "Instance type used for the instances hosting docker-machine."
-  type        = string
-  default     = "m5.large"
-}
-
-variable "docker_machine_spot_price_bid" {
-  description = "Spot price bid."
-  type        = string
-  default     = "0.06"
 }
 
 variable "docker_machine_download_url" {
@@ -183,18 +160,6 @@ variable "runners_pull_policy" {
   default     = "always"
 }
 
-variable "runners_monitoring" {
-  description = "Enable detailed cloudwatch monitoring for spot instances."
-  type        = bool
-  default     = false
-}
-
-variable "runners_ebs_optimized" {
-  description = "Enable runners to be EBS-optimized."
-  type        = bool
-  default     = true
-}
-
 variable "runners_machine_autoscaling_periods" {
   description = "runners.machine.autoscaling.Periods: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersmachineautoscaling-sections"
   type        = list(string)
@@ -217,18 +182,6 @@ variable "runners_machine_autoscaling_timezone" {
   description = "runners.machine.autoscaling.Timezone: https://docs.gitlab.com/runner/configuration/advanced-configuration.html#the-runnersmachineautoscaling-sections"
   type        = string
   default     = null
-}
-
-variable "runners_root_size" {
-  description = "Runner instance root size in GB."
-  type        = number
-  default     = 16
-}
-
-variable "runners_iam_instance_profile_name" {
-  description = "IAM instance profile name of the runners, will be used in the runner config.toml"
-  type        = string
-  default     = ""
 }
 
 variable "runners_environment_vars" {
@@ -281,12 +234,6 @@ variable "userdata_post_install" {
 
 variable "runners_use_private_address" {
   description = "Restrict runners to the use of a private IP address"
-  type        = bool
-  default     = true
-}
-
-variable "runners_request_spot_instance" {
-  description = "Whether or not to request spot instances via docker-machine"
   type        = bool
   default     = true
 }
@@ -375,12 +322,6 @@ variable "agent_tags" {
   default     = {}
 }
 
-variable "runner_tags" {
-  description = "Map of tags that will be added to runner EC2 instances."
-  type        = map(string)
-  default     = {}
-}
-
 variable "allow_iam_service_linked_role_creation" {
   description = "Boolean used to control attaching the policy to a runner instance to create service linked roles."
   type        = bool
@@ -420,31 +361,14 @@ variable "ami_owners" {
   default     = ["amazon"]
 }
 
-variable "runner_ami_filter" {
-  description = "List of maps used to create the AMI filter for the Gitlab runner docker-machine AMI."
-  type        = map(list(string))
-
-  default = {
-    name = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
-  }
-}
-
-variable "runner_ami_owners" {
-  description = "The list of owners used to select the AMI of Gitlab runner docker-machine instances."
-  type        = list(string)
-
-  # Canonical
-  default = ["099720109477"]
-}
-
 variable "overrides" {
-  description = "This maps provides the possibility to override some defaults. The following attributes are supported: `name_sg` overwrite the `Name` tag for all security groups created by this module. `name_runner_agent_instance` override the `Name` tag for the ec2 instance defined in the auto launch configuration. `name_docker_machine_runners` overrides the `Name` tag spot instances created by the runner agent."
+  description = "This maps provides the possibility to override some defaults. The following attributes are supported: `name_sg` overwrite the `Name` tag for all security groups created by this module. `name_runner_agent_instance` override the `Name` tag for the ec2 instance defined in the auto launch configuration."
   type        = map(string)
 
   default = {
     name_sg                     = ""
     name_runner_agent_instance  = ""
-    name_docker_machine_runners = ""
+
   }
 }
 
@@ -544,12 +468,6 @@ variable "enable_asg_recreation" {
   description = "Enable automatic redeployment of the Runner ASG when the Launch Configs change."
   default     = true
   type        = bool
-}
-
-variable "enable_forced_updates" {
-  description = "DEPRECATED! and is replaced by `enable_asg_recreation. Setting this variable to true will do the oposite as expected. For backward compatibility the variable will remain some releases. Old desription: Enable automatic redeployment of the Runner ASG when the Launch Configs change."
-  default     = null
-  type        = string
 }
 
 variable "permissions_boundary" {

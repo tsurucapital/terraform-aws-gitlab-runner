@@ -1,15 +1,6 @@
 data "aws_caller_identity" "current" {}
 
-data "aws_subnet" "runners" {
-  id = var.subnet_id_runners
-}
-
-data "aws_availability_zone" "runners" {
-  name = data.aws_subnet.runners.availability_zone
-}
-
 locals {
-  enable_asg_recreation = var.enable_forced_updates != null ? ! var.enable_forced_updates : var.enable_asg_recreation
 
   template_user_data = templatefile("${path.module}/template/user-data.tpl",
     {
@@ -51,27 +42,6 @@ locals {
     aws_region     = var.aws_region
     gitlab_url     = var.runners_gitlab_url
     name           = var.runners_name
-    tags = replace(var.overrides["name_docker_machine_runners"] == "" ? format(
-      "Name,%s-docker-machine,%s,%s",
-      var.environment,
-      local.tags_string,
-      local.runner_tags_string,
-      ) : format(
-      "%s,%s,Name,%s",
-      local.tags_string,
-      local.runner_tags_string,
-      var.overrides["name_docker_machine_runners"],
-    ), ",,", ",")
-    vpc_id                     = var.vpc_id
-    subnet_id                  = var.subnet_id_runners
-    aws_zone                   = data.aws_availability_zone.runners.name_suffix
-    instance_type              = var.docker_machine_instance_type
-    spot_price_bid             = var.docker_machine_spot_price_bid
-    ami                        = data.aws_ami.docker_machine.id
-    security_group_name        = aws_security_group.docker_machine.name
-    monitoring                 = var.runners_monitoring
-    ebs_optimized              = var.runners_ebs_optimized
-    instance_profile           = aws_iam_instance_profile.docker_machine.name
     additional_volumes         = local.runners_additional_volumes
     token                      = var.runners_token
     executor                   = var.runners_executor
@@ -84,11 +54,6 @@ locals {
     idle_time                  = var.runners_idle_time
     max_builds                 = local.runners_max_builds_string
     docker_machine_autoscaling = [local.docker_machine_autoscaling_defaults]
-    root_size                  = var.runners_root_size
-    iam_instance_profile_name  = var.runners_iam_instance_profile_name
-    use_private_address_only   = var.runners_use_private_address
-    use_private_address        = ! var.runners_use_private_address
-    request_spot_instance      = var.runners_request_spot_instance
     environment_vars           = jsonencode(var.runners_environment_vars)
     pre_build_script           = var.runners_pre_build_script
     post_build_script          = var.runners_post_build_script
@@ -135,22 +100,8 @@ locals {
   EOF
 }
 
-data "aws_ami" "docker_machine" {
-  most_recent = "true"
-
-  dynamic "filter" {
-    for_each = var.runner_ami_filter
-    content {
-      name   = filter.key
-      values = filter.value
-    }
-  }
-
-  owners = var.runner_ami_owners
-}
-
 resource "aws_autoscaling_group" "gitlab_runner_instance" {
-  name                      = local.enable_asg_recreation ? "${aws_launch_configuration.gitlab_runner_instance.name}-asg" : "${var.environment}-as-group"
+  name                      = var.enable_asg_recreation ? "${aws_launch_configuration.gitlab_runner_instance.name}-asg" : "${var.environment}-as-group"
   vpc_zone_identifier       = var.subnet_ids_gitlab_runner
   min_size                  = "1"
   max_size                  = "1"
