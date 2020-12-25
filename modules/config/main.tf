@@ -4,12 +4,13 @@ locals {
   cloudtrail_prefix      = var.cloudtrail_prefix == "" ? "gitlab-runner-config" : var.cloudtrail_prefix
   cloudtrail_bucket      = length(var.cloudtrail_bucket) > 0 ? data.aws_s3_bucket.cloudtrail[0].bucket : "${var.name}-cloudtrail"
   cloudtrail_bucket_name = length(var.cloudtrail_bucket) > 0 ? data.aws_s3_bucket.cloudtrail[0].bucket : aws_s3_bucket.cloudtrail[0].bucket
-  cloudtrail_bucket_arn  = "arn:aws:s3:::${local.cloudtrail_bucket}"
+  cloudtrail_bucket_arn  = length(var.cloudtrail_bucket) > 0 ? data.aws_s3_bucket.cloudtrail[0].arn : aws_s3_bucket.cloudtrail[0].arn
+
 
   config_key         = var.config_key == "" ? "config.toml" : var.config_key
   config_bucket      = length(var.config_bucket) > 0 ? data.aws_s3_bucket.config[0].bucket : "${var.name}-config"
-  config_bucket_name = length(var.cloudtrail_bucket) > 0 ? data.aws_s3_bucket.config[0].bucket : aws_s3_bucket.config[0].bucket
-  config_bucket_arn  = "arn:aws:s3:::${local.config_bucket}"
+  config_bucket_name = length(var.config_bucket) > 0 ? data.aws_s3_bucket.config[0].bucket : aws_s3_bucket.config[0].bucket
+  config_bucket_arn  = length(var.config_bucket) > 0 ? data.aws_s3_bucket.config[0].arn : aws_s3_bucket.config[0].arn
 
   extra_files_prefix = trim(var.extra_files_prefix == "" ? "/extra-files/" : var.extra_files_prefix, "/")
 
@@ -113,7 +114,6 @@ resource "aws_s3_bucket" "cloudtrail" {
   count  = var.config_bucket == "" ? 1 : 0
   bucket = local.cloudtrail_bucket
 
-  policy        = data.aws_iam_policy_document.cloudtrail_bucket.json
   acl           = "private"
   tags          = var.tags
   force_destroy = true
@@ -161,6 +161,15 @@ data "aws_iam_policy_document" "cloudtrail_bucket" {
   }
 }
 
+# We have to use a separate S3 bucket policy rather than using the `policy`
+# attribute at bucket creation as otherwise we have a cycle: the policy includes
+# the bucket ARN which we only get after the bucket creation which means we
+# can't set the policy at bucket creation.
+resource "aws_s3_bucket_policy" "cloudtrail_bucket" {
+  bucket = local.cloudtrail_bucket_name
+  policy = data.aws_iam_policy_document.cloudtrail_bucket.json
+}
+
 resource "aws_cloudtrail" "cloudtrail" {
   name           = local.cloudtrail_name
   s3_bucket_name = local.cloudtrail_bucket
@@ -176,6 +185,11 @@ resource "aws_cloudtrail" "cloudtrail" {
       values = ["${local.config_bucket_arn}/"]
     }
   }
+
+  # We can't create the CloudTrail until the correct policy is attached. Make
+  # sure we don't try too early or we will get
+  # InsufficientS3BucketPolicyException.
+  depends_on = [aws_s3_bucket_policy.cloudtrail_bucket]
 }
 
 data "aws_iam_policy_document" "config_update_ssm_command_trust" {
