@@ -97,7 +97,7 @@ locals {
     output_limit               = var.runners_output_limit
     volumes_tmpfs              = join(",", [for v in var.runners_volumes_tmpfs : format("\"%s\" = \"%s\"", v["volume"], v["options"])])
     services_volumes_tmpfs     = join(",", [for v in var.runners_services_volumes_tmpfs : format("\"%s\" = \"%s\"", v["volume"], v["options"])])
-    docker_machine_options     = local.docker_machine_options_string
+    docker_machine_options     = var.docker_machine_options
     bucket_name                = local.bucket_name
     shared_cache               = var.cache_shared
   }

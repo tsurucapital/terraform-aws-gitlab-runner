@@ -53,9 +53,13 @@
       "amazonec2-monitoring=${monitoring}",
       "amazonec2-iam-instance-profile=%{ if iam_instance_profile_name != "" }${iam_instance_profile_name}%{ else }${instance_profile}%{ endif ~}",
       "amazonec2-root-size=${root_size}",
-      "amazonec2-ami=${ami}"%{ if docker_machine_options != "" },%{ endif ~}
+      "amazonec2-ami=${ami}"%{ if length(docker_machine_options) > 0 },%{ endif ~}
 %{ endif }
-${docker_machine_options}
+%{ if length(docker_machine_options) > 0 ~}
+      %{~ for ix in range(length(docker_machine_options)) ~}
+      "${docker_machine_options[ix]}"${ix < length(docker_machine_options) - 1 ? "," : ""}
+      %{~ endfor ~}
+%{~ endif ~}
     ]
 %{ for autoscaling_config in docker_machine_autoscaling ~}
 %{~ if length(keys(autoscaling_config)) > 0 ~}
