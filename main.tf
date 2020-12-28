@@ -41,7 +41,7 @@ locals {
     machine_name               = var.docker_machine_name
     aws_region                 = var.aws_region
     gitlab_url                 = var.runners_gitlab_url
-    name                       = var.runners_name
+    name                       = var.environment
     additional_volumes         = local.runners_additional_volumes
     token                      = var.runners_token
     executor                   = var.runners_executor
@@ -147,7 +147,7 @@ data "aws_ami" "runner" {
 }
 
 resource "aws_launch_configuration" "gitlab_runner_instance" {
-  name_prefix          = var.runners_name
+  name_prefix          = var.environment
   security_groups      = [aws_security_group.runner.id]
   key_name             = var.ssh_key_pair
   image_id             = data.aws_ami.runner.id

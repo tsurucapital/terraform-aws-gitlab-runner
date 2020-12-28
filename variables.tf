@@ -78,11 +78,6 @@ variable "docker_machine_version" {
   default     = "0.16.2"
 }
 
-variable "runners_name" {
-  description = "Name of the runner, will be used in the runner config.toml."
-  type        = string
-}
-
 variable "runners_executor" {
   description = "The executor to use. Currently supports `docker+machine` or `docker`."
   type        = string

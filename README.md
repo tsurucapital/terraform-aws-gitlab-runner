@@ -178,7 +178,6 @@ module "runner" {
   subnet_ids_gitlab_runner = module.vpc.private_subnets
   subnet_id_runners        = element(module.vpc.private_subnets, 0)
 
-  runners_name       = "docker-default"
   runners_gitlab_url = "https://gitlab.com"
   runners_token = "pre-registered-authentication-token"
 }
