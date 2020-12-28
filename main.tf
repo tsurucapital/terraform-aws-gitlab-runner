@@ -37,11 +37,11 @@ locals {
   )
 
   runners_defaults = {
-    machine_driver = var.docker_machine_driver
-    machine_name   = var.docker_machine_name
-    aws_region     = var.aws_region
-    gitlab_url     = var.runners_gitlab_url
-    name           = var.runners_name
+    machine_driver             = var.docker_machine_driver
+    machine_name               = var.docker_machine_name
+    aws_region                 = var.aws_region
+    gitlab_url                 = var.runners_gitlab_url
+    name                       = var.runners_name
     additional_volumes         = local.runners_additional_volumes
     token                      = var.runners_token
     executor                   = var.runners_executor
@@ -63,7 +63,7 @@ locals {
     volumes_tmpfs              = join(",", [for v in var.runners_volumes_tmpfs : format("\"%s\" = \"%s\"", v["volume"], v["options"])])
     services_volumes_tmpfs     = join(",", [for v in var.runners_services_volumes_tmpfs : format("\"%s\" = \"%s\"", v["volume"], v["options"])])
     docker_machine_options     = var.docker_machine_options
-    bucket_name                = local.bucket_name
+    bucket_name                = var.cache_bucket
     shared_cache               = var.cache_shared
   }
 
@@ -202,27 +202,6 @@ resource "aws_iam_role_policy_attachment" "config_bucket" {
 }
 
 ################################################################################
-### Create cache bucket
-################################################################################
-locals {
-  bucket_name         = var.cache_bucket["create"] ? module.cache.bucket : lookup(var.cache_bucket, "bucket", "")
-  cache_bucket_policy = var.cache_bucket["create"] ? module.cache.policy_arn : lookup(var.cache_bucket, "policy", "")
-}
-
-module "cache" {
-  source = "./modules/cache"
-
-  environment = var.environment
-  tags        = local.tags
-
-  create_cache_bucket                  = var.cache_bucket["create"]
-  cache_bucket_prefix                  = var.cache_bucket_prefix
-  cache_bucket_name_include_account_id = var.cache_bucket_name_include_account_id
-  cache_bucket_versioning              = var.cache_bucket_versioning
-  cache_expiration_days                = var.cache_expiration_days
-}
-
-################################################################################
 ### Trust policy
 ################################################################################
 resource "aws_iam_instance_profile" "instance" {
@@ -276,37 +255,6 @@ resource "aws_iam_role_policy_attachment" "instance_session_manager_aws_managed"
   count = var.enable_runner_ssm_access ? 1 : 0
 
   role       = aws_iam_role.instance.name
-  policy_arn = "${var.arn_format}:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-
-################################################################################
-### Policy for the docker machine instance to access cache
-################################################################################
-resource "aws_iam_role_policy_attachment" "docker_machine_cache_instance" {
-  count      = var.cache_bucket["create"] || lookup(var.cache_bucket, "policy", "") != "" ? 1 : 0
-  role       = aws_iam_role.instance.name
-  policy_arn = local.cache_bucket_policy
-}
-
-################################################################################
-### docker machine instance policy
-################################################################################
-resource "aws_iam_role" "docker_machine" {
-  name                 = "${var.environment}-docker-machine-role"
-  assume_role_policy   = length(var.docker_machine_role_json) > 0 ? var.docker_machine_role_json : templatefile("${path.module}/policies/instance-role-trust-policy.json", {})
-  permissions_boundary = var.permissions_boundary == "" ? null : "${var.arn_format}:iam::${data.aws_caller_identity.current.account_id}:policy/${var.permissions_boundary}"
-}
-
-resource "aws_iam_instance_profile" "docker_machine" {
-  name = "${var.environment}-docker-machine-profile"
-  role = aws_iam_role.docker_machine.name
-}
-
-resource "aws_iam_role_policy_attachment" "docker_machine_session_manager_aws_managed" {
-  count = var.enable_docker_machine_ssm_access ? 1 : 0
-
-  role       = aws_iam_role.docker_machine.name
   policy_arn = "${var.arn_format}:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
