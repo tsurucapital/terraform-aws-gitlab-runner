@@ -144,13 +144,19 @@ data "aws_ami" "runner" {
   }
 
   owners = var.ami_owners
+
+  count = var.aws_ami_id != null ? 1 : 0
+}
+
+locals {
+  aws_ami_id = var.aws_ami_id != null ? var.aws_ami_id : data.aws_ami.runner[0].id
 }
 
 resource "aws_launch_configuration" "gitlab_runner_instance" {
   name_prefix          = var.environment
   security_groups      = [aws_security_group.runner.id]
   key_name             = var.ssh_key_pair
-  image_id             = data.aws_ami.runner.id
+  image_id             = local.aws_ami_id
   user_data            = local.template_user_data
   instance_type        = var.instance_type
   ebs_optimized        = var.runner_instance_ebs_optimized

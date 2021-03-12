@@ -311,8 +311,14 @@ variable "instance_role_json" {
   default     = ""
 }
 
+variable "aws_ami_id" {
+  description = "AWS AMI ID to use for the GitLab runner agent AMI. If not set, ami_filter and ami_owners will be used."
+  type        = string
+  default     = null
+}
+
 variable "ami_filter" {
-  description = "List of maps used to create the AMI filter for the Gitlab runner agent AMI. Must resolve to an Amazon Linux 1 or 2 image."
+  description = "List of maps used to create the AMI filter for the Gitlab runner agent AMI. Must resolve to an Amazon Linux 1 or 2 image. Unused if aws_ami_id is set."
   type        = map(list(string))
 
   default = {
@@ -321,7 +327,7 @@ variable "ami_filter" {
 }
 
 variable "ami_owners" {
-  description = "The list of owners used to select the AMI of Gitlab runner agent instances."
+  description = "The list of owners used to select the AMI of Gitlab runner agent instances. Unusude if aws_ami_id is set."
   type        = list(string)
   default     = ["amazon"]
 }
