@@ -25,8 +25,6 @@ locals {
       runners_executor            = var.runners_executor
       pre_install                 = var.userdata_pre_install
       post_install                = var.userdata_post_install
-      runners_gitlab_url          = var.runners_gitlab_url
-      runners_token               = var.runners_token
   })
 
   docker_machine_autoscaling_defaults = merge(
