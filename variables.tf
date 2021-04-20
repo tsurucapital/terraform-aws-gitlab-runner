@@ -19,47 +19,6 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "subnet_ids_gitlab_runner" {
-  description = "Subnet used for hosting the GitLab runner."
-  type        = list(string)
-}
-
-variable "metrics_autoscaling" {
-  description = "A list of metrics to collect. The allowed values are GroupDesiredCapacity, GroupInServiceCapacity, GroupPendingCapacity, GroupMinSize, GroupMaxSize, GroupInServiceInstances, GroupPendingInstances, GroupStandbyInstances, GroupStandbyCapacity, GroupTerminatingCapacity, GroupTerminatingInstances, GroupTotalCapacity, GroupTotalInstances."
-  type        = list(string)
-  default     = null
-}
-
-variable "instance_type" {
-  description = "Instance type used for the GitLab runner."
-  type        = string
-  default     = "t3.micro"
-}
-
-variable "runner_instance_ebs_optimized" {
-  description = "Enable the GitLab runner instance to be EBS-optimized."
-  type        = bool
-  default     = true
-}
-
-variable "runner_instance_spot_price" {
-  description = "By setting a spot price bid price the runner agent will be created via a spot request. Be aware that spot instances can be stopped by AWS."
-  type        = string
-  default     = null
-}
-
-variable "ssh_key_pair" {
-  description = "Set this to use existing AWS key pair"
-  type        = string
-  default     = null
-}
-
-variable "docker_machine_download_url" {
-  description = "Full url pointing to a linux x64 distribution of docker machine. Once set `docker_machine_version` will be ingored. For example the GitLab version, https://gitlab-docker-machine-downloads.s3.amazonaws.com/v0.16.2-gitlab.2/docker-machine."
-  type        = string
-  default     = ""
-}
-
 variable "docker_machine_driver" {
   description = "Name of docker-machine driver. Set it to use a custom docker-machine driver."
   type        = string
@@ -70,12 +29,6 @@ variable "docker_machine_name" {
   description = "MachineName parameter in [runners.machine] settings. Set it to use a custom name."
   type        = string
   default     = "runner-%s"
-}
-
-variable "docker_machine_version" {
-  description = "Version of docker-machine. The version will be ingored once `docker_machine_download_url` is set."
-  type        = string
-  default     = "0.16.2"
 }
 
 variable "runners_executor" {
@@ -215,44 +168,14 @@ variable "runners_output_limit" {
   default     = 4096
 }
 
-variable "userdata_pre_install" {
-  description = "User-data script snippet to insert before GitLab runner install"
-  type        = string
-  default     = ""
-}
-
-variable "userdata_post_install" {
-  description = "User-data script snippet to insert after GitLab runner install"
-  type        = string
-  default     = ""
-}
-
-variable "runners_use_private_address" {
-  description = "Restrict runners to the use of a private IP address"
-  type        = bool
-  default     = true
-}
-
 variable "cache_shared" {
   description = "Enables cache sharing between runners, false by default."
   type        = bool
   default     = false
 }
 
-variable "gitlab_runner_version" {
-  description = "Version of the GitLab runner."
-  type        = string
-  default     = "13.1.1"
-}
-
 variable "enable_ping" {
   description = "Allow ICMP Ping to the ec2 instances."
-  type        = bool
-  default     = false
-}
-
-variable "enable_gitlab_runner_ssh_access" {
-  description = "Enables SSH Access to the gitlab runner instance."
   type        = bool
   default     = false
 }
@@ -305,33 +228,6 @@ variable "docker_machine_options" {
   default     = []
 }
 
-variable "instance_role_json" {
-  description = "Default runner instance override policy, expected to be in JSON format."
-  type        = string
-  default     = ""
-}
-
-variable "aws_ami_id" {
-  description = "AWS AMI ID to use for the GitLab runner agent AMI. If not set, ami_filter and ami_owners will be used."
-  type        = string
-  default     = null
-}
-
-variable "ami_filter" {
-  description = "List of maps used to create the AMI filter for the Gitlab runner agent AMI. Must resolve to an Amazon Linux 1 or 2 image. Unused if aws_ami_id is set."
-  type        = map(list(string))
-
-  default = {
-    name = ["amzn2-ami-hvm-2.*-x86_64-ebs"]
-  }
-}
-
-variable "ami_owners" {
-  description = "The list of owners used to select the AMI of Gitlab runner agent instances. Unusude if aws_ami_id is set."
-  type        = list(string)
-  default     = ["amazon"]
-}
-
 variable "overrides" {
   description = "This maps provides the possibility to override some defaults. The following attributes are supported: `name_sg` overwrite the `Name` tag for all security groups created by this module. `name_runner_agent_instance` override the `Name` tag for the ec2 instance defined in the auto launch configuration."
   type        = map(string)
@@ -346,41 +242,6 @@ variable "overrides" {
 variable "cache_bucket" {
   description = "Bucket to use for GitLab artifacts caching. You should ensure right permissions ahead of time."
   type        = string
-}
-
-variable "enable_runner_user_data_trace_log" {
-  description = "Enable bash xtrace for the user data script that creates the EC2 instance for the runner agent. Be aware this could log sensitive data such as you GitLab runner token."
-  type        = bool
-  default     = false
-}
-
-variable "enable_schedule" {
-  description = "Flag used to enable/disable auto scaling group schedule for the runner instance. "
-  type        = bool
-  default     = false
-}
-
-variable "schedule_config" {
-  description = "Map containing the configuration of the ASG scale-in and scale-up for the runner instance. Will only be used if enable_schedule is set to true. "
-  type        = map(any)
-  default = {
-    scale_in_recurrence  = "0 18 * * 1-5"
-    scale_in_count       = 0
-    scale_out_recurrence = "0 8 * * 1-5"
-    scale_out_count      = 1
-  }
-}
-
-variable "runner_root_block_device" {
-  description = "The EC2 instance root block device configuration. Takes the following keys: `delete_on_termination`, `volume_type`, `volume_size`, `encrypted`, `iops`"
-  type        = map(string)
-  default     = {}
-}
-
-variable "enable_runner_ssm_access" {
-  description = "Add IAM policies to the runner agent instance to connect via the Session Manager."
-  type        = bool
-  default     = false
 }
 
 variable "runners_volumes_tmpfs" {
@@ -399,42 +260,6 @@ variable "runners_services_volumes_tmpfs" {
   default = []
 }
 
-variable "kms_key_id" {
-  description = "KMS key id to encrypted the CloudWatch logs. Ensure CloudWatch has access to the provided KMS key."
-  type        = string
-  default     = ""
-}
-
-variable "enable_kms" {
-  description = "Let the module manage a KMS key, logs will be encrypted via KMS. Be-aware of the costs of an custom key."
-  type        = bool
-  default     = false
-}
-
-variable "kms_deletion_window_in_days" {
-  description = "Key rotation window, set to 0 for no rotation. Only used when `enable_kms` is set to `true`."
-  type        = number
-  default     = 7
-}
-
-variable "enable_eip" {
-  description = "Enable the assignment of an EIP to the gitlab runner instance"
-  default     = false
-  type        = bool
-}
-
-variable "enable_asg_recreation" {
-  description = "Enable automatic redeployment of the Runner ASG when the Launch Configs change."
-  default     = true
-  type        = bool
-}
-
-variable "permissions_boundary" {
-  description = "Name of permissions boundary policy to attach to AWS IAM roles"
-  default     = ""
-  type        = string
-}
-
 variable "log_group_name" {
   description = "Option to override the default name (`environment`) of the log group, requires `enable_cloudwatch_logging = true`."
   default     = null
@@ -447,48 +272,10 @@ variable "runners" {
   type        = list(any)
 }
 
-################################################################################
-### Variables passed directly to config module.
-################################################################################
 
-variable "config_bucket" {
-  type        = string
-  default     = ""
-  description = "If you already have exisiting S3 Bucket for storing configuration files, pass it's name here. Otherwise, leave this field empty and a new, private S3 bucket will be created by this module."
-}
-
-variable "config_key" {
-  type        = string
-  default     = ""
-  description = "Path to Gitlab runner configuration on configuration S3 bucket. If left empty, defaults to `config.toml`."
-}
-
-variable "cloudtrail_bucket" {
-  type        = string
-  default     = ""
-  description = "If you already have exisiting S3 Bucket for CloudTrail, pass it's name here. Otherwise, leave this field empty and a new CloudTrail S3 bucket will be created by this module."
-}
-
-variable "cloudtrail_prefix" {
-  type        = string
-  default     = ""
-  description = "Prefix on S3 bucket for storing CloudTrail logs."
-}
-
-variable "post_reload_config" {
-  description = "Custom script to be executed after config.toml file is reloaded. If you use `userdata_post_install` to further modify config.toml, you may need to do the same modifications here, to ensure that configuration is always modified in the same way."
-  default     = ""
-  type        = string
-}
-
-variable "extra_files_prefix" {
-  type        = string
-  default     = "/extra-files/"
-  description = "S3 Prefix used before keys of extra files on S3 bucket."
-}
-
-variable "extra_files" {
-  type        = map(string)
-  default     = {}
-  description = "Map of additional files to push to Gitlab Runner in { \"/path/from/root\": \"file contents\" } format. Files can be later found at /extra-files path and used in user-data script or in config reload script."
+variable "instance_role" {
+  description = "Instance role that's used by our EC2 instance via instance profile. Any role policies will be attached to this."
+  type = object({
+    name = string
+  })
 }
